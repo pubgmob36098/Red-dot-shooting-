@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Touch Shooting Game</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #222; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let target = { x: 100, y: 100, size: 40, dx: 3 };
+    let bullets = [];
+    let score = 0;
+
+    function drawTarget() {
+      ctx.fillStyle = "red";
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawBullets() {
+      ctx.fillStyle = "yellow";
+      bullets.forEach(b => {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "24px Arial";
+      ctx.fillText("Score: " + score, 20, 40);
+    }
+
+    function updateTarget() {
+      target.x += target.dx;
+      if (target.x + target.size > canvas.width || target.x - target.size < 0) {
+        target.dx *= -1;
+      }
+    }
+
+    function updateBullets() {
+      bullets.forEach(b => b.y -= 5);
+      bullets = bullets.filter(b => b.y > 0);
+    }
+
+    function resetTarget() {
+      target.x = Math.random() * (canvas.width - target.size * 2) + target.size;
+      target.y = Math.random() * (canvas.height / 2);
+      target.dx = (Math.random() > 0.5 ? 3 : -3);
+    }
+
+    function checkCollision() {
+      bullets.forEach((b, i) => {
+        const dist = Math.hypot(b.x - target.x, b.y - target.y);
+        if (dist < target.size) {
+          bullets.splice(i, 1);
+          score++;
+          resetTarget();
+        }
+      });
+    }
+
+    canvas.addEventListener("touchstart", e => {
+      const touch = e.touches[0];
+      bullets.push({ x: touch.clientX, y: canvas.height - 20 });
+    });
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updateTarget();
+      updateBullets();
+      checkCollision();
+      drawTarget();
+      drawBullets();
+      drawScore();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
